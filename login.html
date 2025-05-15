@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIPOLE - LGBTQ+ Login</title>
+  <style>
+    :root {
+      --primary: #fceef5;
+      --secondary: #e0bbf6;
+      --accent: #a3e3ff;
+      --text: #2c2c2c;
+      --highlight: #ff9eb5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(to right, #fde2e4, #fad2e1, #e2f0cb);
+      overflow: hidden;
+    }
+
+    .main {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      padding: 1rem;
+      position: relative;
+    }
+
+    .image-box {
+      flex: 1;
+      min-width: 300px;
+      max-width: 600px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-box img {
+      width: 100%;
+      height: auto;
+      max-height: 90vh;
+      object-fit: cover;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-box {
+      flex: 1;
+      min-width: 300px;
+      max-width: 450px;
+      position: relative;
+      height: 500px;
+      overflow: hidden;
+    }
+
+    .branding {
+      text-align: center;
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .form-section {
+      position: absolute;
+      width: 100%;
+      background: #fff;
+      border-radius: 25px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      transition: transform 0.6s ease;
+    }
+
+    #loginForm {
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    #registerForm {
+      transform: translateX(100%);
+      z-index: 1;
+    }
+
+    .active-login #loginForm {
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .active-login #registerForm {
+      transform: translateX(100%);
+      z-index: 1;
+    }
+
+    .active-register #loginForm {
+      transform: translateX(-100%);
+      z-index: 1;
+    }
+
+    .active-register #registerForm {
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .form-section h2 {
+      color: var(--text);
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+      text-align: center;
+    }
+
+    .form-section input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    .form-section button {
+      width: 100%;
+      padding: 0.75rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #ff9a9e, #fad0c4);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .form-section button:hover {
+      background: linear-gradient(to right, #84fab0, #8fd3f4);
+    }
+
+    .switch-section {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    @media (max-width: 768px) {
+      .main {
+        flex-direction: column;
+        padding: 2rem 1rem;
+      }
+
+      .form-box {
+        height: auto;
+      }
+
+      .image-box {
+        max-height: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div class="image-box">
+      <img src="https://cdn.shopify.com/s/files/1/0025/9817/4773/files/queer-love-valentines-1_1000x.jpg?v=1707390389" alt="Queer OGs in love" />
+    </div>
+    <div class="form-box" id="formContainer" class="active-login">
+      <div class="branding">DIPOLE</div>
+      
+    <div id="loginForm" class="form-section">
+  <h2>Login</h2>
+  <form method="POST" action="http://127.0.0.1:5000/login">
+    <input type="text" name="username" placeholder="Username" required />
+    <input type="password" name="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+  </form>
+  <div class="switch-section" onclick="switchForm('register')">
+    Not registered yet? <strong>Register here</strong>
+  </div>
+</div>
+
+
+      <div id="registerForm" class="form-section">
+  <h2>Register</h2>
+  <form method="POST" action="http://127.0.0.1:5000/register">
+    <input type="text" name="username" placeholder="Username" required />
+    <input type="email" name="email" placeholder="Email" required />
+    <input type="password" name="password" placeholder="Password" required />
+    <button type="submit">Register</button>
+  </form>
+  <div class="switch-section" onclick="switchForm('login')">
+    Already have an account? <strong>Login here</strong>
+  </div>
+</div>
+    </div>
+  </div>
+
+  <script>
+    function switchForm(type) {
+      const formContainer = document.getElementById('formContainer');
+      formContainer.className = 'form-box';
+      formContainer.classList.add(type === 'register' ? 'active-register' : 'active-login');
+    }
+  </script>
+</body>
+</html>
