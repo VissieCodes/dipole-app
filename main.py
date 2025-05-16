@@ -58,3 +58,7 @@ def login():
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
+
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "Welcome to the user API!"})
