@@ -95,13 +95,18 @@ def refresh():
 
 @app.route('/protected', methods=['GET'])
 def protected():
-    token = request.headers.get('Authorization')
-    if not token:
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
         return jsonify({"error": "Token is missing"}), 403
-    
-    if token.startswith("Bearer "):
-    token = token[7:]
-    
+
+    # Expecting header like: "Bearer <token>"
+    parts = auth_header.split()
+
+    if len(parts) != 2 or parts[0].lower() != 'bearer':
+        return jsonify({"error": "Invalid token header"}), 401
+
+    token = parts[1]
+
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         return jsonify({"message": f"Welcome {decoded['username']}! You accessed a protected route!"})
@@ -109,6 +114,7 @@ def protected():
         return jsonify({"error": "Access token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
+
 
 @app.route('/', methods=['GET'])
 def home():
