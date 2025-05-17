@@ -96,7 +96,10 @@ def protected():
     token = request.headers.get('Authorization')
     if not token:
         return jsonify({"error": "Token is missing"}), 403
-
+    
+    if token.startswith("Bearer "):
+    token = token[7:]
+    
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         return jsonify({"message": f"Welcome {decoded['username']}! You accessed a protected route!"})
