@@ -56,6 +56,7 @@ def login():
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
+
 # --- Optional root/home route ---
 @app.route('/', methods=['GET'])
 def home():
