@@ -1,13 +1,10 @@
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify
-import sqlite3
-import os
-import jwt
-import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3, os, jwt, datetime
 
 app = Flask(__name__)
 DATABASE = 'users.db'
-SECRET_KEY = 'your-secret-key'  # Replace with env var in production
+SECRET_KEY = 'your-secret-key'  # 🔒 Replace with a strong secret in production
 
 def init_db():
     if not os.path.exists(DATABASE):
@@ -52,25 +49,29 @@ def login():
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
-        token = jwt.encode({
-            'user': username,
+        # Generate JWT token
+        payload = {
+            'username': username,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-        }, SECRET_KEY, algorithm='HS256')
-        return jsonify({"message": "Login successful!", "token": token})
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+        return jsonify({"token": token})
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
+# 🔐 Protected route
 @app.route('/protected', methods=['GET'])
 def protected():
     token = request.headers.get('Authorization')
+
     if not token:
-        return jsonify({"error": "Token missing"}), 403
+        return jsonify({"error": "Token is missing"}), 403
 
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-        return jsonify({"message": f"Welcome, {decoded['user']}!"})
+        return jsonify({"message": f"Welcome {decoded['username']}! You accessed a protected route!"})
     except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token expired"}), 401
+        return jsonify({"error": "Token has expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
