@@ -1,3 +1,4 @@
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify
 import sqlite3
 import os
@@ -24,7 +25,8 @@ def init_db():
 def register():
     username = request.form.get('username')
     email = request.form.get('email')
-    password = request.form.get('password')
+    raw_password = request.form.get('password')
+    password = generate_password_hash(raw_password)
 
     try:
         conn = sqlite3.connect(DATABASE)
@@ -41,24 +43,26 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
-    password = request.form.get('password')
+    raw_password = request.form.get('password')
 
     conn = sqlite3.connect(DATABASE)
     c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-    user = c.fetchone()
+    c.execute("SELECT password FROM users WHERE username=?", (username,))
+    result = c.fetchone()
     conn.close()
 
-    if user:
+    if result and check_password_hash(result[0], raw_password):
         return jsonify({"message": "Login successful!"})
     else:
         return jsonify({"error": "Invalid credentials"}), 401
+
+# --- Optional root/home route ---
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"message": "Welcome to the user API!"})
 
 # --- Init on launch ---
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
 
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({"message": "Welcome to the user API!"})
