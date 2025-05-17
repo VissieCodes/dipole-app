@@ -4,7 +4,10 @@ import sqlite3, os, jwt, datetime
 
 app = Flask(__name__)
 DATABASE = 'users.db'
-SECRET_KEY = 'your-secret-key'  # 🔒 Replace with a strong secret in production
+SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret")
+
+# In-memory store (for demo purposes)
+refresh_tokens = {}
 
 def init_db():
     if not os.path.exists(DATABASE):
@@ -18,6 +21,20 @@ def init_db():
                     )''')
         conn.commit()
         conn.close()
+
+def generate_tokens(username):
+    access_payload = {
+        'username': username,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+    }
+    refresh_payload = {
+        'username': username,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
+    }
+    access_token = jwt.encode(access_payload, SECRET_KEY, algorithm='HS256')
+    refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm='HS256')
+    refresh_tokens[username] = refresh_token
+    return access_token, refresh_token
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -35,7 +52,7 @@ def register():
         conn.close()
         return jsonify({"message": "User registered successfully!"}), 201
     except sqlite3.IntegrityError:
-        return jsonify({"error": "Registration failed. Try different credentials."}), 409
+        return jsonify({"error": "Username or email already exists!"}), 409
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -49,21 +66,34 @@ def login():
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
-        # Generate JWT token
-        payload = {
-            'username': username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
-        }
-        token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
-        return jsonify({"token": token})
+        access_token, refresh_token = generate_tokens(username)
+        return jsonify({"access_token": access_token, "refresh_token": refresh_token})
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
-# 🔐 Protected route
+@app.route('/refresh', methods=['POST'])
+def refresh():
+    token = request.form.get('refresh_token')
+    if not token:
+        return jsonify({"error": "Refresh token missing"}), 403
+
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        username = decoded['username']
+
+        if refresh_tokens.get(username) != token:
+            return jsonify({"error": "Invalid refresh token"}), 401
+
+        new_access_token, _ = generate_tokens(username)
+        return jsonify({"access_token": new_access_token})
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Refresh token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
 @app.route('/protected', methods=['GET'])
 def protected():
     token = request.headers.get('Authorization')
-
     if not token:
         return jsonify({"error": "Token is missing"}), 403
 
@@ -71,7 +101,7 @@ def protected():
         decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         return jsonify({"message": f"Welcome {decoded['username']}! You accessed a protected route!"})
     except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token has expired"}), 401
+        return jsonify({"error": "Access token expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
@@ -81,4 +111,4 @@ def home():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=False)
+    app.run(debug=True)
