@@ -2,11 +2,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, jsonify
 import sqlite3
 import os
+import jwt
+import datetime
 
 app = Flask(__name__)
 DATABASE = 'users.db'
+SECRET_KEY = 'your-secret-key'  # Replace with env var in production
 
-# --- STEP 1: Create DB if it doesn't exist ---
 def init_db():
     if not os.path.exists(DATABASE):
         conn = sqlite3.connect(DATABASE)
@@ -20,7 +22,6 @@ def init_db():
         conn.commit()
         conn.close()
 
-# --- STEP 2: Register route ---
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username')
@@ -39,7 +40,6 @@ def register():
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username or email already exists!"}), 409
 
-# --- STEP 3: Login route ---
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
@@ -52,18 +52,32 @@ def login():
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
-        return jsonify({"message": "Login successful!"})
+        token = jwt.encode({
+            'user': username,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }, SECRET_KEY, algorithm='HS256')
+        return jsonify({"message": "Login successful!", "token": token})
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
+@app.route('/protected', methods=['GET'])
+def protected():
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({"error": "Token missing"}), 403
 
-# --- Optional root/home route ---
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return jsonify({"message": f"Welcome, {decoded['user']}!"})
+    except jwt.ExpiredSignatureError:
+        return jsonify({"error": "Token expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"error": "Invalid token"}), 401
+
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({"message": "Welcome to the user API!"})
 
-# --- Init on launch ---
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
-
