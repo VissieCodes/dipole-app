@@ -35,7 +35,7 @@ def register():
         conn.close()
         return jsonify({"message": "User registered successfully!"}), 201
     except sqlite3.IntegrityError:
-        return jsonify({"error": "Username or email already exists!"}), 409
+        return jsonify({"error": "Registration failed. Try different credentials."}), 409
 
 @app.route('/login', methods=['POST'])
 def login():
