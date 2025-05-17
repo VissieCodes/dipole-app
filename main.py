@@ -115,10 +115,11 @@ def protected():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
+from flask import render_template
 
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({"message": "Welcome to the user API!"})
+    return render_template("index.html")
 
 if __name__ == '__main__':
     init_db()
