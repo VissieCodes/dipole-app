@@ -179,6 +179,19 @@
       <img src="https://cdn.shopify.com/s/files/1/0025/9817/4773/files/queer-love-valentines-1_1000x.jpg?v=1707390389" alt="Queer OGs in love" />
     </div>
     <div class="form-box" id="formContainer" class="active-login">
+      
+      {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul style="list-style: none; padding: 0;">
+      {% for category, message in messages %}
+        <li style="color: {{ 'red' if category == 'error' else 'green' }}; margin-bottom: 1rem; text-align:center;">
+          {{ message }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
       <div class="branding">DIPOLE</div>
       
     <div id="loginForm" class="form-section">
