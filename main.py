@@ -15,7 +15,7 @@ refresh_tokens = {}
 
 def init_db():
     if not os.path.exists(DATABASE):
-        conn = sqlite3.connect(DATABASE)
+    with sqlite3.connect(DATABASE) as conn:
         c = conn.cursor()
         c.execute('''CREATE TABLE users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +24,6 @@ def init_db():
                         password TEXT NOT NULL
                     )''')
         conn.commit()
-        conn.close()
 
 def generate_tokens(username):
     access_payload = {
@@ -54,11 +53,25 @@ def register():
                   (username, email, password))
         conn.commit()
         conn.close()
-        flash("Registration successful! Please log in.", "success")
-        return redirect(url_for('home'))
+
+        # Auto-login after registration
+        access_token, refresh_token = generate_tokens(username)
+
+        response = jsonify({
+            "message": "Registration successful!",
+            "access_token": access_token
+        })
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=True,        # Use HTTPS
+            samesite='Strict'
+        )
+        return response
+
     except sqlite3.IntegrityError:
-        flash("Username or email already exists!", "error")
-        return redirect(url_for('home'))
+        return jsonify({"error": "Username or email already exists!"}), 409
     
 @app.route('/login', methods=['POST'])
 def login():
@@ -72,16 +85,28 @@ def login():
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
-        # flash success (optional) and redirect
-        flash("Login successful!", "success")
-        return redirect(url_for('protected'))
+        # Generate tokens
+        access_token, refresh_token = generate_tokens(username)
+
+        # Set refresh token in secure, HTTP-only cookie
+        response = jsonify({
+            "access_token": access_token
+        })
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=True,        # Important: use HTTPS in production
+            samesite='Strict'   # Adjust if needed
+        )
+        return response
     else:
-        flash("Invalid credentials", "error")
-        return redirect(url_for('home'))
+        return jsonify({"error": "Invalid credentials"}), 401
 
 @app.route('/refresh', methods=['POST'])
 def refresh():
-    token = request.form.get('refresh_token')
+    # Get refresh token from HTTP-only cookie
+    token = request.cookies.get('refresh_token')
     if not token:
         return jsonify({"error": "Refresh token missing"}), 403
 
@@ -89,15 +114,26 @@ def refresh():
         decoded = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         username = decoded['username']
 
+        # Check if token matches the one stored
         if refresh_tokens.get(username) != token:
             return jsonify({"error": "Invalid refresh token"}), 401
 
+        # Generate new tokens
         new_access_token, new_refresh_token = generate_tokens(username)
-        return jsonify({
-            "access_token": new_access_token,
-            "refresh_token": new_refresh_token
+
+        # Set new refresh token in HTTP-only cookie
+        response = jsonify({
+            "access_token": new_access_token
         })
-        
+        response.set_cookie(
+            'refresh_token',
+            new_refresh_token,
+            httponly=True,
+            secure=True,        # Make sure you use HTTPS in production
+            samesite='Strict'   # Adjust as needed: 'Lax', 'None', or 'Strict'
+        )
+        return response
+
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Refresh token expired"}), 401
     except jwt.InvalidTokenError:
@@ -125,7 +161,30 @@ def protected():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
-from flask import render_template
+@app.route('/logout', methods=['POST'])
+def logout():
+    response = jsonify({"message": "Logged out successfully"})
+
+    # Remove refresh token from in-memory store
+    refresh_token = request.cookies.get('refresh_token')
+    if refresh_token:
+        try:
+            decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=['HS256'])
+            username = decoded['username']
+            refresh_tokens.pop(username, None)
+        except jwt.InvalidTokenError:
+            pass
+
+    # Clear the cookie
+    response.set_cookie(
+        'refresh_token',
+        '',
+        expires=0,
+        httponly=True,
+        secure=True,
+        samesite='Strict'
+    )
+    return response
 
 @app.route('/', methods=['GET'])
 def home():
