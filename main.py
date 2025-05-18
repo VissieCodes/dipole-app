@@ -1,11 +1,9 @@
-from flask import Flask, request, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3, os, jwt, datetime
+from flask import Flask, request, jsonify, from werkzeug.security import generate_password_hash, check_password_hash, import sqlite3, os, jwt, datetime, from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 
 app = Flask(__name__)
+SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret")
 app.secret_key = SECRET_KEY
 DATABASE = 'users.db'
-SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret")
 
 # In-memory store (for demo purposes)
 refresh_tokens = {}
@@ -56,10 +54,6 @@ def register():
     except sqlite3.IntegrityError:
         flash("Username or email already exists!", "error")
         return redirect(url_for('home'))
-
-@app.route('/', methods=['GET'])
-def home():
-    return render_template("index.html")
     
 @app.route('/login', methods=['POST'])
 def login():
@@ -94,9 +88,12 @@ def refresh():
             return jsonify({"error": "Invalid refresh token"}), 401
 
         new_access_token, _ = generate_tokens(username)
-        return jsonify({"access_token": new_access_token,
-                       "refresh_token": new_refresh_token
-                       })
+new_access_token, new_refresh_token = generate_tokens(username)
+return jsonify({
+    "access_token": new_access_token,
+    "refresh_token": new_refresh_token
+})
+
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Refresh token expired"}), 401
     except jwt.InvalidTokenError:
