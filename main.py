@@ -92,13 +92,12 @@ def refresh():
         if refresh_tokens.get(username) != token:
             return jsonify({"error": "Invalid refresh token"}), 401
 
-        new_access_token, _ = generate_tokens(username)
-new_access_token, new_refresh_token = generate_tokens(username)
-return jsonify({
-    "access_token": new_access_token,
-    "refresh_token": new_refresh_token
-})
-
+        new_access_token, new_refresh_token = generate_tokens(username)
+        return jsonify({
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token
+        })
+        
     except jwt.ExpiredSignatureError:
         return jsonify({"error": "Refresh token expired"}), 401
     except jwt.InvalidTokenError:
