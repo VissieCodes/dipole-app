@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3, os, jwt, datetime
 
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 DATABASE = 'users.db'
 SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret")
 
@@ -50,9 +51,11 @@ def register():
                   (username, email, password))
         conn.commit()
         conn.close()
-        return jsonify({"message": "User registered successfully!"}), 201
+        flash("Registration successful! Please log in.", "success")
+        return redirect(url_for('home'))
     except sqlite3.IntegrityError:
-        return jsonify({"error": "Username or email already exists!"}), 409
+        flash("Username or email already exists!", "error")
+        return redirect(url_for('home'))
 
 @app.route('/', methods=['GET'])
 def home():
@@ -70,10 +73,12 @@ def login():
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
-        access_token, refresh_token = generate_tokens(username)
-        return jsonify({"access_token": access_token, "refresh_token": refresh_token})
+        # flash success (optional) and redirect
+        flash("Login successful!", "success")
+        return redirect(url_for('protected'))
     else:
-        return jsonify({"error": "Invalid credentials"}), 401
+        flash("Invalid credentials", "error")
+        return redirect(url_for('home'))
 
 @app.route('/refresh', methods=['POST'])
 def refresh():
