@@ -54,6 +54,10 @@ def register():
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username or email already exists!"}), 409
 
+@app.route('/', methods=['GET'])
+def home():
+    return render_template("index.html")
+    
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form.get('username')
