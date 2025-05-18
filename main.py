@@ -1,4 +1,9 @@
-from flask import Flask, request, jsonify, from werkzeug.security import generate_password_hash, check_password_hash, import sqlite3, os, jwt, datetime, from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import os
+import jwt
+import datetime
 
 app = Flask(__name__)
 SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret")
