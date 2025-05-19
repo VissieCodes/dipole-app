@@ -192,7 +192,7 @@ def logout():
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_template("index.html")
+    return render_template("auth.html")
 
 if __name__ == '__main__':
     init_db()
