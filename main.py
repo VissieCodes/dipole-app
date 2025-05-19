@@ -15,15 +15,15 @@ refresh_tokens = {}
 
 def init_db():
     if not os.path.exists(DATABASE):
-    with sqlite3.connect(DATABASE) as conn:
-        c = conn.cursor()
-        c.execute('''CREATE TABLE users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT UNIQUE NOT NULL,
-                        email TEXT UNIQUE NOT NULL,
-                        password TEXT NOT NULL
-                    )''')
-        conn.commit()
+        with sqlite3.connect(DATABASE) as conn:
+            c = conn.cursor()
+            c.execute('''CREATE TABLE users (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            username TEXT UNIQUE NOT NULL,
+                            email TEXT UNIQUE NOT NULL,
+                            password TEXT NOT NULL
+                        )''')
+            conn.commit()
 
 def generate_tokens(username):
     access_payload = {
