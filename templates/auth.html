@@ -229,5 +229,49 @@
       formContainer.classList.add(type === 'register' ? 'active-register' : 'active-login');
     }
   </script>
+
+  <script>
+  // Handle login
+  document.querySelector('#loginForm form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+
+    const res = await fetch('/login', {
+      method: 'POST',
+      body: data
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('access_token', result.access_token); // Optional
+      window.location.href = '/dashboard.html'; // Redirect on success
+    } else {
+      alert(result.error || 'Login failed!');
+    }
+  });
+
+  // Handle registration
+  document.querySelector('#registerForm form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+
+    const res = await fetch('/register', {
+      method: 'POST',
+      body: data
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem('access_token', result.access_token); // Optional
+      window.location.href = '/dashboard.html'; // Redirect on success
+    } else {
+      alert(result.error || 'Registration failed!');
+    }
+  });
+</script>
 </body>
 </html>
