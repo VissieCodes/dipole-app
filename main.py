@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3, os, jwt, datetime
 
@@ -33,6 +33,10 @@ def generate_tokens(username):
     refresh_tokens[username] = refresh_token
     return access_token, refresh_token
 
+@app.route('/auth')
+def auth_page():
+    return render_template('auth.html')
+
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username')
@@ -42,18 +46,22 @@ def register():
 
     try:
         conn = sqlite3.connect(DATABASE)
-        conn.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-                     (username, email, password))
+        c = conn.cursor()
+        c.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                  (username, email, password))
         conn.commit()
         conn.close()
 
         access_token, refresh_token = generate_tokens(username)
-        response = jsonify({"message": "Registration successful!", "access_token": access_token})
-        response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
-        return response
+
+        flash("Registered successfully!", "success")
+        resp = make_response(redirect(url_for('auth_page')))
+        resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
+        return resp
 
     except sqlite3.IntegrityError:
-        return jsonify({"error": "Username or email already exists!"}), 409
+        flash("Username or email already exists!", "error")
+        return redirect(url_for('auth_page'))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -61,17 +69,20 @@ def login():
     raw_password = request.form.get('password')
 
     conn = sqlite3.connect(DATABASE)
-    cursor = conn.execute("SELECT password FROM users WHERE username=?", (username,))
-    result = cursor.fetchone()
+    c = conn.cursor()
+    c.execute("SELECT password FROM users WHERE username=?", (username,))
+    result = c.fetchone()
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
         access_token, refresh_token = generate_tokens(username)
-        response = jsonify({"access_token": access_token})
-        response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
-        return response
-    return jsonify({"error": "Invalid credentials"}), 401
 
+        resp = make_response(redirect(url_for('dashboard')))
+        resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
+        return resp
+    else:
+        flash("Invalid credentials", "error")
+        return redirect(url_for('auth_page'))
 @app.route('/refresh', methods=['POST'])
 def refresh():
     token = request.cookies.get('refresh_token')
