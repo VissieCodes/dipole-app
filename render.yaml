@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: dipole-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        value: *hpa&7sB9-+cEf7u3%86xH&KVZ$uF@Btt!Sk$6WsDSU!yTB$+6=6kQc9v+xH9g?=fEXqD3Qwd2AtnwjExCnKpUCjBNZqRs#+YC3M*&m88VwDbnfGEEnX@3xC%e9cj3*=
