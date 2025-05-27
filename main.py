@@ -132,6 +132,10 @@ def logout():
 def home():
     return render_template("index.html")
 
+@app.route('/auth')
+def auth():
+    return render_template("auth.html")
+    
 @app.route('/dashboard')
 def dashboard():
     return render_template("dashboard.html")
