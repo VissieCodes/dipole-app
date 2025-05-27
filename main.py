@@ -130,7 +130,7 @@ def logout():
 
 @app.route('/')
 def home():
-    return render_template("auth.html")
+    return render_template("index.html")
 
 @app.route('/dashboard')
 def dashboard():
