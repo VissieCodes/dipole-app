@@ -246,7 +246,7 @@
 
     if (res.ok) {
       localStorage.setItem('access_token', result.access_token); // Optional
-      window.location.href = '/dashboard.html'; // Redirect on success
+      window.location.href = '/dashboard'; // Redirect on success
     } else {
       alert(result.error || 'Login failed!');
     }
@@ -267,7 +267,7 @@
 
     if (res.ok) {
       localStorage.setItem('access_token', result.access_token); // Optional
-      window.location.href = '/dashboard.html'; // Redirect on success
+      window.location.href = '/dashboard'; // Redirect on success
     } else {
       alert(result.error || 'Registration failed!');
     }
