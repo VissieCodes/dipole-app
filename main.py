@@ -42,26 +42,37 @@ def register():
     username = request.form.get('username')
     email = request.form.get('email')
     raw_password = request.form.get('password')
+
+    if not username or not email or not raw_password:
+        return jsonify({'error': 'Missing fields'}), 400
+
     password = generate_password_hash(raw_password)
 
     try:
         conn = sqlite3.connect(DATABASE)
         c = conn.cursor()
-        c.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+        c.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", 
                   (username, email, password))
         conn.commit()
         conn.close()
 
         access_token, refresh_token = generate_tokens(username)
 
-        flash("Registered successfully!", "success")
-        resp = make_response(redirect(url_for('auth_page')))
-        resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
-        return resp
+        response = jsonify({
+            "message": "Registration successful!",
+            "access_token": access_token
+        })
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=False,  # Set to True only if you're using HTTPS
+            samesite='Strict'
+        )
+        return response
 
     except sqlite3.IntegrityError:
-        flash("Username or email already exists!", "error")
-        return redirect(url_for('auth_page'))
+        return jsonify({"error": "Username or email already exists!"}), 409
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -77,12 +88,21 @@ def login():
     if result and check_password_hash(result[0], raw_password):
         access_token, refresh_token = generate_tokens(username)
 
-        resp = make_response(redirect(url_for('dashboard')))
-        resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Strict')
-        return resp
+        response = jsonify({
+            "message": "Login successful",
+            "access_token": access_token
+        })
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=False,  # HTTPS = True
+            samesite='Strict'
+        )
+        return response
     else:
-        flash("Invalid credentials", "error")
-        return redirect(url_for('auth_page'))
+        return jsonify({"error": "Invalid credentials"}), 401
+
 @app.route('/refresh', methods=['POST'])
 def refresh():
     token = request.cookies.get('refresh_token')
