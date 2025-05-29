@@ -144,16 +144,6 @@ def protected():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
-@app.route('/dashboard')
-def dashboard():
-    dummy_users = [
-        {"name": "John", "age": 28, "distance": "2 miles"},
-        {"name": "Alex", "age": 30, "distance": "1 mile"},
-        {"name": "Mark", "age": 24, "distance": "3 miles"},
-        {"name": "Chris", "age": 29, "distance": "0.5 mile"},
-    ]
-    return render_template("dashboard.html", users=dummy_users)
-
 @app.route('/logout', methods=['POST'])
 def logout():
     refresh_token = request.cookies.get('refresh_token')
@@ -179,7 +169,13 @@ def auth():
     
 @app.route('/dashboard')
 def dashboard():
-    return render_template("dashboard.html")
+    dummy_users = [
+        {"name": "John", "age": 28, "distance": "2 miles"},
+        {"name": "Alex", "age": 30, "distance": "1 mile"},
+        {"name": "Mark", "age": 24, "distance": "3 miles"},
+        {"name": "Chris", "age": 29, "distance": "0.5 mile"},
+    ]
+    return render_template("dashboard.html", users=dummy_users)
 
 @app.route('/health')
 def health():
