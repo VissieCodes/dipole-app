@@ -1,55 +1,57 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-gray-100">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body {
+      background: linear-gradient(to right, #facc15, #fef3c7);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .avatar {
+      box-shadow: 0 0 0 4px #facc15;
+    }
   </style>
 </head>
-<body class="text-gray-800 bg-gradient-to-b from-yellow-100 to-gray-100 min-h-screen">
+<body class="text-gray-800 min-h-screen flex flex-col">
 
   <!-- Navbar -->
-  <header class="bg-white shadow-md sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-yellow-600">🔥 Grindr Dashboard</h1>
-      <a href="/logout" class="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded-full transition">Logout</a>
-    </div>
-  </header>
+  <nav class="glass fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center max-w-7xl mx-auto mt-4">
+    <h1 class="text-2xl font-bold text-yellow-600">🔥 Grindr Dashboard</h1>
+    <a href="/logout" class="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded-full transition">Logout</a>
+  </nav>
 
-  <!-- Layout -->
-  <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-6 px-6 py-8">
+  <div class="mt-24 px-6 pb-10 max-w-7xl mx-auto w-full">
+    <h2 class="text-3xl font-bold mb-8 text-center">Nearby Users</h2>
 
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-white rounded-2xl shadow-md p-6 space-y-4">
-      <h2 class="text-lg font-semibold mb-2">Menu</h2>
-      <ul class="space-y-2">
-        <li><a href="#" class="block px-3 py-2 rounded hover:bg-yellow-100 transition">Dashboard</a></li>
-        <li><a href="#" class="block px-3 py-2 rounded hover:bg-yellow-100 transition">Messages</a></li>
-        <li><a href="#" class="block px-3 py-2 rounded hover:bg-yellow-100 transition">Nearby Users</a></li>
-      </ul>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1">
-      <h2 class="text-3xl font-bold mb-6">Nearby Users</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {% for user in users %}
-        <div class="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition">
-          <img src="https://api.dicebear.com/7.x/thumbs/svg?seed={{ user.name }}" alt="Avatar" class="w-24 h-24 rounded-full mx-auto mb-3 border-4 border-yellow-300 object-cover">
-          <h3 class="text-center text-lg font-semibold">{{ user.name }}, {{ user.age }}</h3>
-          <p class="text-center text-sm text-gray-500">{{ user.distance }}</p>
-          <div class="mt-4 text-center">
-            <button class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-full transition">Message</button>
-          </div>
-        </div>
-        {% endfor %}
+    <!-- Grid of User Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      {% for user in users %}
+      <div class="glass p-6 text-center transition transform hover:-translate-y-1 hover:shadow-xl">
+        <img
+          src="https://api.dicebear.com/7.x/thumbs/svg?seed={{ user.name }}"
+          alt="Avatar"
+          class="w-24 h-24 rounded-full mx-auto avatar object-cover mb-4"
+        />
+        <h3 class="text-lg font-semibold">{{ user.name }}, {{ user.age }}</h3>
+        <p class="text-sm text-gray-600 mb-4">{{ user.distance }}</p>
+        <button class="bg-yellow-400 hover:bg-yellow-500 text-black font-semibold px-4 py-2 rounded-full transition">
+          Message
+        </button>
       </div>
-    </main>
+      {% endfor %}
+    </div>
   </div>
 </body>
 </html>
