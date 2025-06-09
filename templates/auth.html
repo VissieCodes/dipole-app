@@ -179,7 +179,7 @@
       <img src="https://cdn.shopify.com/s/files/1/0025/9817/4773/files/queer-love-valentines-1_1000x.jpg?v=1707390389" alt="Queer OGs in love" />
     </div>
     <div class="form-box" id="formContainer" class="active-login">
-
+      
       {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <ul style="list-style: none; padding: 0;">
@@ -193,7 +193,7 @@
 {% endwith %}
 
       <div class="branding">DIPOLE</div>
-
+      
     <div id="loginForm" class="form-section">
   <h2>Login</h2>
   <form method="POST" action="{{ url_for('login') }}">
@@ -246,7 +246,6 @@
 
     if (res.ok) {
       localStorage.setItem('access_token', result.access_token); // Optional
-      window.location.href = '/dashboard.html'; // Redirect on success
       window.location.href = '/dashboard'; // Redirect on success
     } else {
       alert(result.error || 'Login failed!');
@@ -268,7 +267,6 @@
 
     if (res.ok) {
       localStorage.setItem('access_token', result.access_token); // Optional
-      window.location.href = '/dashboard.html'; // Redirect on success
       window.location.href = '/dashboard'; // Redirect on success
     } else {
       alert(result.error || 'Registration failed!');
