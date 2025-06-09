@@ -66,7 +66,7 @@ def register():
             'refresh_token',
             refresh_token,
             httponly=True,
-            secure=False,  # Set to True only if you're using HTTPS
+            secure=True,  # Set to True only if you're using HTTPS
             samesite='Strict'
         )
         return response
@@ -96,7 +96,7 @@ def login():
             'refresh_token',
             refresh_token,
             httponly=True,
-            secure=False,  # HTTPS = True
+            secure=True,  # HTTPS = True
             samesite='Strict'
         )
         return response
