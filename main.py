@@ -19,6 +19,16 @@ def init_db():
             )''')
             conn.commit()
 
+def upgrade_db():
+    with sqlite3.connect(DATABASE) as conn:
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN last_login TEXT")
+        except: pass
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN login_count INTEGER DEFAULT 0")
+        except: pass
+        conn.commit()
+
 def generate_tokens(username):
     access_payload = {
         'username': username,
@@ -86,6 +96,14 @@ def login():
     conn.close()
 
     if result and check_password_hash(result[0], raw_password):
+    # Update login stats
+    conn = sqlite3.connect(DATABASE)
+    c = conn.cursor()
+    c.execute("UPDATE users SET last_login=?, login_count=login_count+1 WHERE username=?", 
+              (datetime.datetime.utcnow().isoformat(), username))
+    conn.commit()
+    conn.close()
+
         access_token, refresh_token = generate_tokens(username)
 
         response = jsonify({
@@ -144,6 +162,27 @@ def protected():
     except jwt.InvalidTokenError:
         return jsonify({"error": "Invalid token"}), 401
 
+@app.route('/admin')
+def admin_dashboard():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM users")
+    users = c.fetchall()
+    conn.close()
+
+    user_data = []
+    for user in users:
+        user_data.append({
+            "username": user["username"],
+            "email": user["email"],
+            "last_login": user["last_login"],
+            "login_count": user["login_count"],
+            "has_active_refresh_token": refresh_tokens.get(user["username"]) is not None
+        })
+
+    return render_template("admin_dashboard.html", users=user_data)
+
 @app.route('/logout', methods=['POST'])
 def logout():
     refresh_token = request.cookies.get('refresh_token')
@@ -183,4 +222,5 @@ def health():
 
 if __name__ == '__main__':
     init_db()
+    upgrade_db()
     app.run()
